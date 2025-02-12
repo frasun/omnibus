@@ -1,0 +1,48 @@
+# Copyright (C) 2024 Chocante
+# This file is distributed under the GNU General Public License v3.0.
+msgid ""
+msgstr ""
+"Project-Id-Version: Omnibus 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/chocante-omnibus\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2024-08-04T11:41:13+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.10.0\n"
+"X-Domain: chocante-omnibus\n"
+
+#. Plugin Name of the plugin
+#: chocante-omnibus.php
+msgid "Omnibus"
+msgstr ""
+
+#. Description of the plugin
+#: chocante-omnibus.php
+msgid "Collect information about product price changes and display the lowest price."
+msgstr ""
+
+#. Author of the plugin
+#: chocante-omnibus.php
+msgid "Chocante"
+msgstr ""
+
+#. translators: %s WC download URL link.
+#: chocante-omnibus.php:35
+msgid "Omnibus requires WooCommerce to be installed and active. You can download %s here."
+msgstr ""
+
+#: includes/class-chocanteomnibus.php:47
+msgid "Cloning is forbidden."
+msgstr ""
+
+#: includes/class-chocanteomnibus.php:54
+msgid "Unserializing instances of this class is forbidden."
+msgstr ""
+
+#. translators: Lowest price info copy.
+#: includes/class-chocanteomnibus.php:121
+msgid "Lowest price prior to sale: %s"
+msgstr ""
