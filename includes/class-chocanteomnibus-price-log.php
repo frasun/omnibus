@@ -51,7 +51,7 @@ class ChocanteOmnibus_Price_Log {
 		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 		product_id bigint(20) unsigned NOT NULL,
 		price varchar(255) NOT NULL,
-		date_changed date NOT NULL default (CURRENT_DATE),
+		date_changed date NOT NULL,
 		PRIMARY KEY  (id),
 		KEY product_id (product_id),
 		KEY product_price_index (product_id, price),
@@ -109,8 +109,9 @@ class ChocanteOmnibus_Price_Log {
 		$this->wpdb->insert(
 			$this->table_name,
 			array(
-				'product_id' => $product_id,
-				'price'      => $price,
+				'product_id'   => $product_id,
+				'price'        => $price,
+				'date_changed' => current_time( 'mysql', true ),
 			)
 		);
 	}

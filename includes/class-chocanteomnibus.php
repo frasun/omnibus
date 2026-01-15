@@ -144,6 +144,12 @@ class ChocanteOmnibus {
 			return $price;
 		}
 
+		// Skip for quick edit in admin.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( isset( $_POST ) && isset( $_POST['woocommerce_quick_edit'] ) ) {
+			return $price;
+		}
+
 		// Get product or variation meta.
 		if ( $product instanceof WC_Product_Variable ) {
 			$variations = $product->get_visible_children();
@@ -174,9 +180,16 @@ class ChocanteOmnibus {
 	 * @return string               Lowest price or regular price.
 	 */
 	public function default_lowest_price( $value, $object_id, $meta_key ) {
-		if ( ( ! is_admin() || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) && self::PRODUCT_META_KEY === $meta_key &&
-			in_array( get_post_type( $object_id, ), array( 'product', 'product_variation' ), true ) ) {
-			$value = wc_get_product( $object_id )->get_regular_price();
+		if ( self::PRODUCT_META_KEY !== $meta_key ) {
+			return $value;
+		}
+
+		if ( is_admin() && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
+			return $value;
+		}
+
+		if ( in_array( get_post_type( $object_id, ), array( 'product', 'product_variation' ), true ) ) {
+			$value = get_post_meta( $object_id, '_regular_price', true );
 		}
 
 		return $value;
