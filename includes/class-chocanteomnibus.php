@@ -108,26 +108,22 @@ class ChocanteOmnibus {
 	 * Register hooks
 	 */
 	private function init() {
-		if ( ! is_admin() || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
-			// Display lowest price in product listings and product summary.
-			add_filter( 'woocommerce_get_price_html', array( $this, 'display_lowest_price' ), 10, 2 );
+		// Display lowest price on the front-end or via front-end ajax requests.
+		add_filter( 'woocommerce_get_price_html', array( $this, 'display_lowest_price' ), 10, 2 );
+		add_filter( 'default_post_metadata', array( $this, 'default_lowest_price' ), 10, 3 );
 
-			// Display regular price if lowest price is not available.
-			add_filter( 'default_post_metadata', array( $this, 'default_lowest_price' ), 10, 3 );
-
-			// Convert lowest price to user selected currency.
-			if ( function_exists( 'wcml_is_multi_currency_on' ) && wcml_is_multi_currency_on() ) {
-				add_filter( 'wcml_price_custom_fields', array( $this, 'wcml_lowest_price' ), 10 );
-			}
-		} else {
-			// Manage lowest price meta on product changes.
-			add_action( 'save_post_product', array( $this, 'on_product_save' ), 10, 3 );
-			add_action( 'woocommerce_ajax_save_product_variations', array( $this, 'on_variations_save' ), 10, 3 );
-		}
+		// Manage lowest price meta on product changes.
+		add_action( 'save_post_product', array( $this, 'on_product_save' ), 10, 3 );
+		add_action( 'woocommerce_ajax_save_product_variations', array( $this, 'on_variations_save' ), 10, 3 );
 
 		// Manage scheduled sales.
 		add_action( 'wc_after_products_starting_sales', array( $this, 'on_scheduled_sale_start' ), 10, 1 );
 		add_action( 'wc_after_products_ending_sales', array( $this, 'on_scheduled_sale_end' ), 10, 1 );
+
+		// Convert lowest price to user selected currency.
+		if ( function_exists( 'wcml_is_multi_currency_on' ) && wcml_is_multi_currency_on() ) {
+			add_filter( 'wcml_price_custom_fields', array( $this, 'wcml_lowest_price' ), 10 );
+		}
 	}
 
 	/**
@@ -139,14 +135,14 @@ class ChocanteOmnibus {
 	 * @return string
 	 */
 	public function display_lowest_price( $price, $product ) {
-		// Do not modify price display if product is not on sale.
-		if ( ! $product->is_on_sale() ) {
+		// Do not modify price display if product is not on sale or out of stock.
+		if ( ! $product->is_on_sale() || ! $product->is_in_stock() ) {
 			return $price;
 		}
 
-		// Skip for quick edit in admin.
+		// Handle quick edit in admin - modify only GET request.
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		if ( isset( $_POST ) && isset( $_POST['woocommerce_quick_edit'] ) ) {
+		if ( is_admin() && ( ! wp_doing_ajax() || ! empty( $_POST ) ) ) {
 			return $price;
 		}
 
@@ -184,15 +180,7 @@ class ChocanteOmnibus {
 			return $value;
 		}
 
-		if ( is_admin() && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
-			return $value;
-		}
-
-		if ( in_array( get_post_type( $object_id, ), array( 'product', 'product_variation' ), true ) ) {
-			$value = get_post_meta( $object_id, '_regular_price', true );
-		}
-
-		return $value;
+		return get_post_meta( $object_id, '_regular_price', true );
 	}
 
 	/**
@@ -217,15 +205,7 @@ class ChocanteOmnibus {
 	 * @param int $product_id Product ID.
 	 */
 	public function on_product_save( $product_id ) {
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return;
-		}
-
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-			return;
-		}
-
-		if ( wp_is_post_revision( $product_id ) ) {
+		if ( wp_is_post_revision( $product_id ) || wp_is_post_autosave( $product_id ) ) {
 			return;
 		}
 
@@ -260,7 +240,6 @@ class ChocanteOmnibus {
 			$this->update_product_data( $variation_id, $sale_price, $sale_date_from );
 		}
 	}
-
 
 	/**
 	 * Handle changes in product sale data

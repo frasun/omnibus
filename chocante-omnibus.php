@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Omnibus
  * Description: Collect information about product price changes and display the lowest price.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Chocante
  * Text Domain: chocante-omnibus
  * Domain Path: /languages

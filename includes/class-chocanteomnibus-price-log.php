@@ -86,11 +86,9 @@ class ChocanteOmnibus_Price_Log {
 	 * Register hooks
 	 */
 	private function init() {
-		if ( is_admin() ) {
-			// Handle product updates.
-			add_action( 'save_post_product', array( $this, 'save_product_price' ), 9, 3 );
-			add_action( 'woocommerce_ajax_save_product_variations', array( $this, 'save_variation_price' ), 9, 3 );
-		}
+		// Handle product updates.
+		add_action( 'save_post_product', array( $this, 'save_product_price' ), 9, 3 );
+		add_action( 'woocommerce_ajax_save_product_variations', array( $this, 'save_variation_price' ), 9, 3 );
 
 		// Daily clean old logs.
 		add_action( self::CLEAN_HOOK, array( $this, 'clean_old_logs' ) );
@@ -143,13 +141,7 @@ class ChocanteOmnibus_Price_Log {
 	 * @param int $product_id Product ID.
 	 */
 	public function save_product_price( $product_id ) {
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return;
-		}
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-			return;
-		}
-		if ( wp_is_post_revision( $product_id ) ) {
+		if ( wp_is_post_revision( $product_id ) || wp_is_post_autosave( $product_id ) ) {
 			return;
 		}
 
