@@ -141,7 +141,7 @@ class ChocanteOmnibus_Price_Log {
 	 * @param int $product_id Product ID.
 	 */
 	public function save_product_price( $product_id ) {
-		if ( wp_is_post_revision( $product_id ) || wp_is_post_autosave( $product_id ) ) {
+		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || wp_is_post_revision( $product_id ) || wp_is_post_autosave( $product_id ) ) {
 			return;
 		}
 

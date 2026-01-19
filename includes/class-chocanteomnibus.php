@@ -120,7 +120,7 @@ class ChocanteOmnibus {
 		add_action( 'wc_after_products_starting_sales', array( $this, 'on_scheduled_sale_start' ), 10, 1 );
 		add_action( 'wc_after_products_ending_sales', array( $this, 'on_scheduled_sale_end' ), 10, 1 );
 
-		// Convert lowest price to user selected currency.
+		// WCML support.
 		if ( function_exists( 'wcml_is_multi_currency_on' ) && wcml_is_multi_currency_on() ) {
 			add_filter( 'wcml_price_custom_fields', array( $this, 'wcml_lowest_price' ), 10 );
 		}
@@ -150,14 +150,21 @@ class ChocanteOmnibus {
 		if ( $product instanceof WC_Product_Variable ) {
 			$variations = $product->get_visible_children();
 
-			// Do not modify price display if product type is variable and price is a range (has more than one visible variation).
+			// Do not modify price display if product type is variable and price is a range (has more than one visible variation) e.g. in product collection loop.
 			if ( count( $variations ) > 1 ) {
 				return $price;
 			}
 
-			$lowest_price = wc_price( get_post_meta( $variations[0], self::PRODUCT_META_KEY, true ) );
+			$product_price = get_post_meta( $variations[0], self::PRODUCT_META_KEY, true );
 		} else {
-			$lowest_price = wc_price( get_post_meta( $product->get_id(), self::PRODUCT_META_KEY, true ) );
+			$product_price = get_post_meta( $product->get_id(), self::PRODUCT_META_KEY, true );
+		}
+
+		// Curcy support.
+		if ( function_exists( 'wmc_get_price' ) ) {
+			$lowest_price = wc_price( wmc_get_price( $product_price ) );
+		} else {
+			$lowest_price = wc_price( $product_price );
 		}
 
 		// translators: Lowest price info copy.
@@ -180,7 +187,9 @@ class ChocanteOmnibus {
 			return $value;
 		}
 
-		return get_post_meta( $object_id, '_regular_price', true );
+		$price = get_post_meta( $object_id, '_regular_price', true );
+
+		return $price;
 	}
 
 	/**
@@ -205,7 +214,7 @@ class ChocanteOmnibus {
 	 * @param int $product_id Product ID.
 	 */
 	public function on_product_save( $product_id ) {
-		if ( wp_is_post_revision( $product_id ) || wp_is_post_autosave( $product_id ) ) {
+		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || wp_is_post_revision( $product_id ) || wp_is_post_autosave( $product_id ) ) {
 			return;
 		}
 
@@ -273,15 +282,9 @@ class ChocanteOmnibus {
 	 * @param bool $is_on_sale If product sale price changed.
 	 */
 	private function manage_lowest_price_meta( $product_id, $is_on_sale ) {
-		$was_on_sale = '' !== get_post_meta( $product_id, self::PRODUCT_META_KEY, true );
-
-		// Add lowest price meta.
-		if ( ! $was_on_sale && $is_on_sale ) {
+		if ( $is_on_sale ) {
 			$this->add_lowest_price_meta( $product_id );
-		}
-
-		// Delete lowest price meta.
-		if ( $was_on_sale && ! $is_on_sale ) {
+		} else {
 			$this->remove_lowest_price_meta( $product_id );
 		}
 	}
